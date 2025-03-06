@@ -1,0 +1,109 @@
+# URL Shortener Service Documentation
+
+## Overview
+This URL Shortener service allows users to shorten long URLs into shorter, easy-to-share links. It also provides functionality to retrieve stored URLs, redirect users, and list stored keys.
+
+## Features
+- Shorten URLs via `POST` or `GET` request.
+- Redirect users to the original URL.
+- Authenticate using an API token.
+- List stored short URLs.
+
+## API Endpoints
+
+### 1. **Homepage**
+#### `GET /`
+Returns an HTML page with instructions on how to use the URL shortener.
+
+### 2. **Shorten a URL**
+#### `POST /`
+**Description**: Shortens a given long URL.
+
+**Headers:**
+```json
+{
+    "Authorization": "your_api_token"
+}
+```
+
+**Request Body:**
+```json
+{
+    "url": "http://www.example.com"
+}
+```
+
+**Response:**
+```json
+{
+    "url": "https://short.url/abc123"
+}
+```
+
+### 3. **Shorten a URL via GET request**
+#### `GET /shorten/:url`
+**Description**: Shortens a URL without requiring a request body.
+
+**Example:**
+```
+GET /shorten/www.example.com
+```
+
+**Response:**
+```json
+{
+    "short_url": "cm8.me/abc123"
+}
+```
+
+### 4. **Redirect to Original URL**
+#### `GET /:slug`
+**Description**: Redirects the user to the original URL.
+
+**Example:**
+```
+GET /abc123
+```
+
+**Response:**
+Redirects to `http://www.example.com`.
+
+If the slug is not found, returns:
+```json
+{
+    "error": "URL not found"
+}
+```
+
+### 5. **List All Stored Keys**
+#### `GET /keys/list`
+**Description**: Retrieves a list of all stored short URLs.
+
+**Response:**
+```json
+{
+    "keys": [
+        { "name": "abc123", "expiration": null },
+        { "name": "xyz789", "expiration": null }
+    ]
+}
+```
+
+## Authentication
+For `POST /` requests, an API token is required in the `Authorization` header. If authentication fails, a `401 Unauthorized` response is returned.
+
+## Error Handling
+- **400 Bad Request**: Invalid input data.
+- **401 Unauthorized**: Missing or invalid API token.
+- **404 Not Found**: Requested short URL does not exist.
+- **500 Internal Server Error**: Unexpected server errors.
+
+## Deployment
+This service can be deployed on Cloudflare Workers. Ensure that `CM8ME_KV` is properly configured as a KV namespace.
+
+## Contact
+For API tokens and support, email `tech@cimet.com.au`.
+
+---
+This document provides a complete guide to using the URL Shortener Service. If you have any questions, feel free to reach out!
+

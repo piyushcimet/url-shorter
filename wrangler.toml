@@ -1,0 +1,17 @@
+name = "shortener"
+main = "src/worker.js"
+compatibility_date = "2023-07-10"
+
+vars = { HOST_URL = "localhost:8787" }
+
+kv_namespaces = [
+	{ binding = "CM8ME_KV", id = "c6b37255377a427aac6076aadad5ea23", preview_id = "a4ea92d70a6645718c9cc98e302e73b7" }
+]
+
+[env.production]
+vars = { HOST_URL = "https://cm8.me" }
+[[env.production.kv_namespaces]]
+binding = "CM8ME_KV"
+id = "c6b37255377a427aac6076aadad5ea23"
+preview_id = "a4ea92d70a6645718c9cc98e302e73b7"
+
