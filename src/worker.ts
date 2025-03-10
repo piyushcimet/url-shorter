@@ -1,32 +1,13 @@
 import { Router, error } from 'itty-router';
 const router = Router();
 
-/**
- * @typedef {Object} Env
- * @property {KVNamespace} CM8ME_KV - The KV namespace for storing shortened URLs.
- * @property {string} HOST_URL - The base URL for shortened links.
- * @property {string} API_TOKEN - The API token for authentication.
- */
-
-/**
- * @typedef {Object} JSONBody
- * @property {string} url - The original long URL to be shortened.
- */
-
-/**
- * Middleware function to check API token authentication.
- * @param {Request} request - The incoming request object.
- * @param {Env} env - The environment variables.
- * @returns {Response|void} - Returns a 401 error if authentication fails.
- */
-
-interface Env {
+export interface Env {
 	CM8ME_KV: KVNamespace;
 	HOST_URL: string;
 	API_TOKEN: string;
 }
 
-interface JSONBody {
+export interface JSONBody {
 	url: string;
 }
 
@@ -35,13 +16,6 @@ const withAuthentication = async (request: Request, env: Env): Promise<Response 
 	const apiToken = env.API_TOKEN;
 	if (token !== apiToken) return error(401, 'Invalid API token.');
 };
-
-/**
- * Serves the homepage with instructions on how to use the URL shortener.
- * @param {Request} request - The incoming request object.
- * @param {Env} env - The environment variables.
- * @returns {Response} - Returns an HTML page with instructions.
- */
 
 router.get('/', async (request: Request, env: Env): Promise<Response> => {
 	return new Response(
@@ -92,13 +66,6 @@ router.get('/', async (request: Request, env: Env): Promise<Response> => {
 	);
 });
 
-/**
- * Handles URL shortening via POST request.
- * @param {Request} request - The incoming request object.
- * @param {Env} env - The environment variables.
- * @returns {Response} - Returns the shortened URL as JSON.
- */
-
 router.post('/', withAuthentication, async (request, env) => {
 	const json: JSONBody = await request.json();
 	const longLink = json?.url;
@@ -114,56 +81,51 @@ router.post('/', withAuthentication, async (request, env) => {
 	});
 });
 
-/**
- * Shortens a given URL using GET request.
- * @param {Request} request - The incoming request object.
- * @param {Env} env - The environment variables.
- * @returns {Response} - Returns the shortened URL as JSON.
- */
-
 router.get('/shorten/:url', async (request, env) => {
 	try {
 		let longLink = decodeURIComponent(request.params.url);
+
 		console.log('Received long URL:', longLink);
 
 		let httpsURL = `https://${longLink}`;
+
 		let httpURL = `http://${longLink}`;
+
 		let finalURL = httpsURL;
 
 		try {
 			const response = await fetch(httpsURL, { method: 'HEAD' });
+
 			if (!response.ok) {
 				console.warn(`HTTPS not reachable, falling back to HTTP for ${longLink}`);
+
 				finalURL = httpURL;
 			}
 		} catch {
 			console.warn(`HTTPS request failed, using HTTP for ${longLink}`);
+
 			finalURL = httpURL;
 		}
 
 		new URL(finalURL);
 
 		let slug = Math.random().toString(36).slice(-7);
+
 		while (await env.CM8ME_KV.get(slug)) {
 			slug = Math.random().toString(36).slice(-7);
 		}
 
 		await env.CM8ME_KV.put(slug, finalURL);
+
 		return new Response(JSON.stringify({ short_url: `cm8.me/${slug}` }), {
 			headers: { 'Content-Type': 'application/json' },
 		});
 	} catch (err) {
 		console.error('Error in /shorten/:url:', err);
+
 		return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
 	}
 });
-
-/**
- * Lists all stored keys in the KV storage.
- * @param {Request} req - The incoming request object.
- * @param {Env} env - The environment variables.
- * @returns {Response} - Returns a JSON list of keys.
- */
 
 router.get('/keys/list', async (req, env) => {
 	const { cursor } = req.query;
@@ -171,12 +133,7 @@ router.get('/keys/list', async (req, env) => {
 	return new Response(JSON.stringify(keys));
 });
 
-/**
- * Redirects a shortened URL to its original long URL.
- * @param {Request} request - The incoming request object.
- * @param {Env} env - The environment variables.
- * @returns {Response} - Redirects to the original URL or returns a 404 error.
- */
+
 
 router.get('/:slug', async (request, env) => {
 	const slug = request.params.slug;
@@ -189,13 +146,6 @@ router.get('/:slug', async (request, env) => {
 	return new Response(JSON.stringify({ error: 'URL not found' }), { status: 404 });
 });
 
-/**
- * Handles incoming requests and routes them to appropriate handlers.
- * @param {Request} request - The incoming request object.
- * @param {Env} env - The environment variables.
- * @param {ExecutionContext} ctx - The execution context for async tasks.
- * @returns {Promise<Response>} - Returns the processed response.
- */
 
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

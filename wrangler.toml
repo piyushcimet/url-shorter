@@ -1,5 +1,5 @@
 name = "shortener"
-main = "src/worker.js"
+main = "src/worker.ts"
 compatibility_date = "2023-07-10"
 
 vars = { HOST_URL = "localhost:8787" }
